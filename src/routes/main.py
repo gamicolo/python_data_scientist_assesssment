@@ -42,7 +42,7 @@ def get_question(session_id,question_number):
             reply['Options'] = create_option_reply(question.id,options)
             reply['Text'] = question.question_text
         else:
-            code = 403
+            code = 404
             reply = "The session id doesn't exists"
 
     return jsonify(
@@ -118,14 +118,17 @@ def get_results(session_id):
     code = 200
     if request.method == 'GET':
 
+        code = 404
+        result = "The session id doesn't exists"
+
         user_session = UserSessions.query.filter(UserSessions.session_id == session_id).first()
         if user_session:
 
-            user = Users.query.filter(Users.id == user_session.user_id).first()
-
-            answers = UserAnswers.query.filter(UserAnswers.user_id == user.id).all()
-
+            code = 200
             result = copy.deepcopy(result_reply)
+
+            user = Users.query.filter(Users.id == user_session.user_id).first()
+            answers = UserAnswers.query.filter(UserAnswers.user_id == user.id).all()
 
             #result['Categories'] = category_list
             result['Categories'] = create_category_reply(answers)
@@ -149,14 +152,10 @@ def get_results(session_id):
             result['EndDate'] = None
             result['CreateDate'] = None
 
-        else:
-            code = 403
-            result = "The session id doesn't exists"
-
-    return jsonify(
-    {
-        "Status": 1,
-        "Message": "Success",
-        "Data": result
-    }),code
+        return jsonify(
+        {
+            "Status": 1,
+            "Message": "Success",
+            "Data": result
+        }),code
 
