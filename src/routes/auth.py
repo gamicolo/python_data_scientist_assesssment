@@ -38,16 +38,13 @@ def register(parent_id):
 
         return jsonify({"Status": 1,"Message": "Success","Data": session_id}),200
 
-    return jsonify({"Status": 1,"Message": "Success","Data": ""}),200
+    return "",200
 
 @auth.route('/api/v1/assessment/<string:session_id>/test', methods=['GET','OPTIONS'])
 def save_timestamp(session_id):
 
-    print(request)
-
-    print(request.args.get('tsp'))
-
     if request.method == 'GET':
+        ts = request.args.get('tsp')
         reply = True
         code = 200
         if not(UserSessions.query.filter(UserSessions.session_id == session_id).first()):
@@ -60,11 +57,12 @@ def save_timestamp(session_id):
             "Message": "Success",
             "Data": reply
         }),code
+    return "",200
 
 @auth.route('/api/v1/assessment/<string:session_id>/start', methods=['POST','OPTIONS'])
 def start_test(session_id):
 
-    #TODO: save the TS from the previous request?
+    #TODO: save here the TS from the previous request?
 
     if request.method == 'POST':
         reply = True
@@ -79,3 +77,5 @@ def start_test(session_id):
             "Message": "Success",
             "Data": reply
         }),code
+
+    return "",200
