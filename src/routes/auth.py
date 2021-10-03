@@ -5,6 +5,9 @@ from src.extensions import db
 from src.models import Users, UserSessions
 
 import uuid
+import copy
+
+from src.templates import test_reply
 
 auth = Blueprint('auth', __name__)
 
@@ -47,16 +50,27 @@ def save_timestamp(session_id):
         ts = request.args.get('tsp')
         reply = True
         code = 200
-        if not(UserSessions.query.filter(UserSessions.session_id == session_id).first()):
-            code = 404
-            reply = "The session id doesn't exists"
-            
+
+        user_session = UserSessions.query.filter(UserSessions.session_id == session_id).first()
+        code = 404
+        reply = "The session id doesn't exists"
+
+        if (user_session):
+            code = 200
+            user = Users.query.filter(Users.id == user_session.user_id).first()
+            reply = copy.deepcopy(test_reply)
+            reply['Taker']['Id'] = user.id
+            reply['Taker']['Email'] = user.email
+            reply['Taker']['Name'] = user.name
+            reply['Taker']['Surname'] = user.surname
+
         return jsonify(
         {
             "Status": 1,
-            "Message": "Success",
+            "Message": "Ok",
             "Data": reply
         }),code
+
     return "",200
 
 @auth.route('/api/v1/assessment/<string:session_id>/start', methods=['POST','OPTIONS'])
