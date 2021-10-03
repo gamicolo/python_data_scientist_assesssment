@@ -11,6 +11,7 @@ class UserSessions(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
     session_id = db.Column(db.String(50))
+    session_init_timestamp = db.Column(db.Integer)
 
 class Questions(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
