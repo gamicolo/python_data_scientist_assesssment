@@ -26,18 +26,22 @@ def register(parent_id):
             email = email
         )
 
-        #TODO: add a try/except in case the DB is down
-        db.session.add(user)
-        db.session.commit()
+        if not(Users.query.filter(Users.email == email)):
+            #TODO: add a try/except in case the DB is down
+            db.session.add(user)
+            db.session.commit()
 
-        user_session = UserSessions(
-            user_id = user.id,
-            session_id = session_id
-        )
+            user_session = UserSessions(
+                user_id = user.id,
+                session_id = session_id
+            )
 
-        #TODO: add a try/except in case the DB is down
-        db.session.add(user_session)
-        db.session.commit()
+            #TODO: add a try/except in case the DB is down
+            db.session.add(user_session)
+            db.session.commit()
+        else:
+            user = Users.query.filter(Users.email == email).first()
+            session_id = UserSessions.query.filter(UserSessions.user_id == user.id).first().session_id
 
         return jsonify({"Status": 1,"Message": "Success","Data": session_id}),200
 
