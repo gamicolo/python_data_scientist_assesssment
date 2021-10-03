@@ -11,12 +11,12 @@ import copy
 main = Blueprint('main', __name__)
 
 
-def create_option_reply(options):
+def create_option_reply(question_id,options):
 
     options_list = []
     for i in range(len(options)):
         o_reply = copy.deepcopy((options_reply))
-        o_reply['QuestionId'] = question.id
+        o_reply['QuestionId'] = question_id
         o_reply['Id'] = options[i].id
         o_reply['Text'] = options[i].option_text
         o_reply['IsCorrect'] = options[i].option_is_correct
@@ -39,7 +39,7 @@ def get_question(session_id,question_number):
             reply = copy.deepcopy(question_reply)
 
             reply['CategoryName'] = question.question_category
-            reply['Options'] = create_option_reply(options)
+            reply['Options'] = create_option_reply(question.id,options)
             reply['Text'] = question.question_text
         else:
             code = 403
