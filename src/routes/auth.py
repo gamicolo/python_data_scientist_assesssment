@@ -6,6 +6,7 @@ from src.models import Users, UserSessions
 
 import uuid
 import copy
+import time
 
 from src.templates import test_reply
 
@@ -80,7 +81,7 @@ def save_timestamp(session_id):
 @auth.route('/api/v1/assessment/<string:session_id>/start', methods=['POST','OPTIONS'])
 def start_test(session_id):
 
-    #TODO: save here the TS from the previous request?
+    #TODO: need to differentiate the create (test request) and start TS 
 
     if request.method == 'POST':
         reply = True
@@ -89,6 +90,26 @@ def start_test(session_id):
             code = 404
             reply = "The session id doesn't exists"
             
+        return jsonify(
+        {
+            "Status": 1,
+            "Message": "Success",
+            "Data": reply
+        }),code
+
+    return "",200
+
+@auth.route('/api/v1/assessment/<string:session_id>/end', methods=['POST','OPTIONS'])
+def end_test(session_id):
+
+    if request.method == 'POST':
+        reply = True
+        code = 200
+        if not(UserSessions.query.filter(UserSessions.session_id == session_id).first()):
+            code = 404
+            reply = "The session id doesn't exists"
+            
+        end_timestamp = time.time()
         return jsonify(
         {
             "Status": 1,
