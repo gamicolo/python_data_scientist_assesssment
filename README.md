@@ -9,7 +9,8 @@ prerequisites (need to have installed):
 
 ##to run the API
 
-1. flask create_tables (only the first time to create all the tables needed)
+1. pip3 install -r requirements.txt
+2. flask create_tables (only the first time to create all the tables needed)
 2. flask run
 
 the API is listening in all IP's in the port 5000
