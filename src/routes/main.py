@@ -28,11 +28,12 @@ def create_option_reply(question_id,options):
 @main.route('/api/v1/assessment/<string:session_id>/question/<int:question_number>', methods=['GET','OPTIONS'])
 def get_question(session_id,question_number):
 
-    reply = {}
-    code = 200
     if request.method == 'GET':
 
+        code = 404
+        reply = "The session id doesn't exists"
         if UserSessions.query.filter(UserSessions.session_id == session_id).first():
+            code = 200
             question = Questions.query.filter(Questions.id == question_number).first()
             options = Options.query.filter(Options.question_id == question_number).all()
 
@@ -41,45 +42,52 @@ def get_question(session_id,question_number):
             reply['CategoryName'] = question.question_category
             reply['Options'] = create_option_reply(question.id,options)
             reply['Text'] = question.question_text
-        else:
-            code = 404
-            reply = "The session id doesn't exists"
 
-    return jsonify(
-    {
-        "Status": 1,
-        "Message": "Success",
-        "Data": reply
-    }),code
+        return jsonify(
+        {
+            "Status": 1,
+            "Message": "Success",
+            "Data": reply
+        }),code
+
+    return "",200
 
 @main.route('/api/v1/assessment/<string:session_id>/answer', methods=['POST','OPTIONS'])
 def save_answer(session_id):
 
     if request.method == 'POST':
 
-        user = UserSessions.query.filter(UserSessions.session_id == session_id).first()
+        user_session = UserSessions.query.filter(UserSessions.session_id == session_id).first()
 
-        question_id = request.json['QuestionId']
-        option_id = request.json['OptionId']
+        code = 404
+        reply = "The session id doesn't exists"
+        if user_session:
 
-        question = Questions.query.filter(Questions.id == question_id).first()
-        option = Options.query.filter(Options.id == option_id).first()
+            code = 200
+            reply = True
 
-        answer = UserAnswers(
-            user_id = user.user_id,
-            question_id = question_id,
-            option_id = option_id,
-            category = question.question_category,
-            is_correct = option.option_is_correct,
-            score = question.question_score
-        )
+            question_id = request.json['QuestionId']
+            option_id = request.json['OptionId']
 
-        db.session.add(answer)
-        db.session.commit()
+            question = Questions.query.filter(Questions.id == question_id).first()
+            option = Options.query.filter(Options.id == option_id).first()
 
-        return jsonify({"Status": 1,"Message": "Success","Data": True}),200
+            answer = UserAnswers(
+                user_id = user_session.user_id,
+                question_id = question_id,
+                option_id = option_id,
+                category = question.question_category,
+                is_correct = option.option_is_correct,
+                score = question.question_score
+            )
 
-    return jsonify({"Status": 1,"Message": "Success","Data": ""}),200
+            #TODO: add try/execpt in case db connection is down
+            db.session.add(answer)
+            db.session.commit()
+
+        return jsonify({"Status": 1,"Message": "Success","Data": reply}),code
+
+    return "",200
 
 
 
@@ -114,8 +122,6 @@ def create_category_reply(answers):
 @main.route('/api/v1/assessment/<string:session_id>/result', methods=['GET','OPTIONS'])
 def get_results(session_id):
 
-    result = {}
-    code = 200
     if request.method == 'GET':
 
         code = 404
@@ -130,7 +136,6 @@ def get_results(session_id):
             user = Users.query.filter(Users.id == user_session.user_id).first()
             answers = UserAnswers.query.filter(UserAnswers.user_id == user.id).all()
 
-            #result['Categories'] = category_list
             result['Categories'] = create_category_reply(answers)
             result['GKey'] = session_id
             result['TakerId'] = user.id
@@ -138,7 +143,7 @@ def get_results(session_id):
             result['TakerSurname'] = user.surname
             result['TakerEmail'] = user.email
 
-            #TODO: crear una funcion para totalizar preguntas (no por categorias)
+            #TODO: create a function to get the total question count (not by category)
             result['QuestionCount'] = 0
             result['CorrectTotalScore'] = 0
             result['AssessmentTotalScore'] = 0
@@ -158,4 +163,6 @@ def get_results(session_id):
             "Message": "Success",
             "Data": result
         }),code
+
+    return "", 200
 
