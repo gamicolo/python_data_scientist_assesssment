@@ -93,7 +93,6 @@ def save_answer(session_id):
 
 def create_category_reply(answers):
 
-    category_list = []
     category_dict = {}
     for i in range(len(answers)):
         if answers[i].category not in category_dict.keys():
@@ -114,10 +113,39 @@ def create_category_reply(answers):
             category_dict[answers[i].category]['InCorrect']+=1
         category_dict[answers[i].category]['TotalScore']+=answers[i].score
 
-    for value in category_dict.values():
-        category_list.append(value)
+    return [value for value in category_dict.values()]
 
-    return category_list
+def question_totalizer(answers, result):
+
+    for i in range(len(answers)):
+        result['QuestionCount']+=1
+        if answers[i].is_correct:
+            result['CorrectAnswers']+=1
+            result['CorrectTotalScore']+=answers[i].score
+        else:
+            result['InCorrectAnswers']+=1
+        result['AssessmentTotalScore']+=answers[i].score
+
+from datetime import datetime, timedelta
+
+def question_time_taken(user_session, result):
+
+    import time
+    start_timestamp = user_session.session_init_timestamp
+    current_timestamp = time.time()
+
+    #TODO: find another way to parse the taken time in seconds
+    time_taken = current_timestamp - start_timestamp #in seconds
+
+    time = str(timedelta(time_taken)).split(':')
+    time_taken_min = str(time[1])
+    time_taken_sec = str(time[2].split('.')[0])
+    time_take_milisec = str(time[2].split('.')[1])
+
+    result['TimeTaken'] = time_taken_min + ' minutes, ' + time_taken_sec + ' seconds, ' + time_take_milisec + ' miliseconds'
+    result['StartDate'] = datetime.utcfromtimestamp(start_timestamp).strftime('%Y-%m-%d %H:%M:%S')
+    result['EndDate'] = datetime.utcfromtimestamp(current_timestamp).strftime('%Y-%m-%d %H:%M:%S')
+    result['CreateDate'] = datetime.utcfromtimestamp(start_timestamp).strftime('%Y-%m-%d %H:%M:%S')
 
 @main.route('/api/v1/assessment/<string:session_id>/result', methods=['GET','OPTIONS'])
 def get_results(session_id):
@@ -143,19 +171,9 @@ def get_results(session_id):
             result['TakerSurname'] = user.surname
             result['TakerEmail'] = user.email
 
-            #TODO: create a function to get the total question count (not by category)
-            result['QuestionCount'] = 0
-            result['CorrectTotalScore'] = 0
-            result['AssessmentTotalScore'] = 0
-            result['EmptyAnswers'] = 0
-            result['CorrectAnswers'] = 0
-            result['InCorrectAnswers'] = 0
+            question_totalizer(answers, result)
 
-            #TODO: evaluar la forma de obtener el tiempo que le lleva al usuario completar el examne
-            result['TimeTaken'] = None
-            result['StartDate'] = None
-            result['EndDate'] = None
-            result['CreateDate'] = None
+            question_time_taken(user_session, result)
 
         return jsonify(
         {
